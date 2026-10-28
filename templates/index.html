@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Record Management System | Dashboard</title>
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <a href="{{ url_for('index') }}" class="nav-brand">
+        <div class="brand-icon">🎓</div>
+        <div class="brand-text">Edu<span>Track</span></div>
+      </a>
+      <nav class="nav-links">
+        <a href="{{ url_for('index') }}" class="nav-link active">
+          <span>📊</span> Dashboard
+        </a>
+        <a href="{{ url_for('add_student') }}" class="nav-link">
+          <span>➕</span> Add Student
+        </a>
+        <a href="{{ url_for('load_demo_data') }}" class="btn btn-outline btn-sm">
+          <span>⚡</span> Load Demo Data
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="main-content">
+    <div class="container">
+
+      <!-- Flash Messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="alert-container">
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">
+                <div class="alert-content">
+                  <span>
+                    {% if category == 'success' %}✅
+                    {% elif category == 'danger' %}❌
+                    {% elif category == 'warning' %}⚠️
+                    {% else %}ℹ️{% endif %}
+                  </span>
+                  <span>{{ message }}</span>
+                </div>
+                <button type="button" class="alert-close" onclick="this.parentElement.remove();">&times;</button>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <!-- Page Header & DB Status -->
+      <div class="page-header">
+        <div class="page-title">
+          <h1>Student Record Management</h1>
+          <p>College CA2 Project &bull; Powered by Flask, PyMongo &amp; MongoDB</p>
+        </div>
+        <div class="page-actions">
+          {% if db_connected %}
+            <div class="status-pill status-connected">
+              <span class="status-dot"></span> {% if is_mock %}MongoDB Active (In-Memory){% else %}MongoDB Connected{% endif %}
+            </div>
+          {% else %}
+            <div class="status-pill status-disconnected">
+              <span class="status-dot"></span> Database Offline
+            </div>
+          {% endif %}
+          <a href="{{ url_for('add_student') }}" class="btn btn-primary">
+            <span>➕</span> Add New Student
+          </a>
+        </div>
+      </div>
+
+      <!-- Dashboard Statistics Grid -->
+      <section class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon blue">👨‍🎓</div>
+          <div class="stat-info">
+            <span class="stat-value">{{ stats.total }}</span>
+            <span class="stat-label">Total Students</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon green">📈</div>
+          <div class="stat-info">
+            <span class="stat-value">{{ stats.avg_cgpa }}</span>
+            <span class="stat-label">Average CGPA</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon amber">🏆</div>
+          <div class="stat-info">
+            <span class="stat-value">{{ stats.highest_cgpa }}</span>
+            <span class="stat-label">Highest CGPA</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon cyan">📚</div>
+          <div class="stat-info">
+            <span class="stat-value">{{ stats.courses_count }}</span>
+            <span class="stat-label">Courses Active</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Search and Filter Bar -->
+      <section class="filter-bar">
+        <form action="{{ url_for('index') }}" method="GET" class="search-form" id="searchFilterForm">
+          <div class="search-input-wrapper">
+            <span class="search-icon">🔍</span>
+            <input 
+              type="text" 
+              name="search" 
+              class="search-input" 
+              placeholder="Search by Registration Number or Student Name..." 
+              value="{{ search_query }}"
+              autocomplete="off"
+            >
+          </div>
+
+          {% if courses %}
+            <select name="course" class="filter-select" onchange="document.getElementById('searchFilterForm').submit();">
+              <option value="">All Courses</option>
+              {% for crs in courses %}
+                <option value="{{ crs }}" {% if selected_course == crs %}selected{% endif %}>{{ crs }}</option>
+              {% endfor %}
+            </select>
+          {% endif %}
+
+          <button type="submit" class="btn btn-primary btn-sm">
+            <span>Search</span>
+          </button>
+
+          {% if search_query or selected_course %}
+            <a href="{{ url_for('index') }}" class="btn btn-secondary btn-sm">
+              <span>✕ Clear Filters</span>
+            </a>
+          {% endif %}
+        </form>
+
+        <div class="table-badge">
+          Showing {{ students|length }} of {{ stats.total }} Records
+        </div>
+      </section>
+
+      <!-- Student Records Table Card -->
+      <section class="table-card">
+        <div class="table-header">
+          <h2 class="table-title">Student Records Registry</h2>
+          {% if search_query %}
+            <span style="font-size: 0.88rem; color: var(--text-muted);">
+              Results matching: <strong>"{{ search_query }}"</strong>
+            </span>
+          {% endif %}
+        </div>
+
+        {% if students and students|length > 0 %}
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width: 50px;">#</th>
+                  <th>Reg. Number</th>
+                  <th>Student Name</th>
+                  <th>Course</th>
+                  <th>Semester</th>
+                  <th>Email Address</th>
+                  <th>CGPA</th>
+                  <th style="text-align: right; width: 110px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for student in students %}
+                  <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>
+                      <span class="reg-no-badge">{{ student.reg_no }}</span>
+                    </td>
+                    <td>
+                      <strong>{{ student.name }}</strong>
+                    </td>
+                    <td>
+                      <span class="course-badge">{{ student.course }}</span>
+                    </td>
+                    <td>
+                      <span class="semester-badge">Sem {{ student.semester }}</span>
+                    </td>
+                    <td>
+                      <a href="mailto:{{ student.email }}" style="color: var(--text-muted); font-size: 0.88rem;">
+                        {{ student.email }}
+                      </a>
+                    </td>
+                    <td>
+                      {% if student.cgpa >= 8.5 %}
+                        <span class="cgpa-pill cgpa-high">⭐ {{ "%.2f"|format(student.cgpa) }}</span>
+                      {% elif student.cgpa >= 7.0 %}
+                        <span class="cgpa-pill cgpa-mid">✓ {{ "%.2f"|format(student.cgpa) }}</span>
+                      {% else %}
+                        <span class="cgpa-pill cgpa-low">• {{ "%.2f"|format(student.cgpa) }}</span>
+                      {% endif %}
+                    </td>
+                    <td style="text-align: right;">
+                      <div class="action-buttons" style="justify-content: flex-end;">
+                        <!-- Edit Button -->
+                        <a 
+                          href="{{ url_for('edit_student', id=student._id) }}" 
+                          class="btn-action edit" 
+                          title="Edit Student"
+                        >
+                          ✏️
+                        </a>
+
+                        <!-- Delete Button with Confirmation -->
+                        <form 
+                          action="{{ url_for('delete_student', id=student._id) }}" 
+                          method="POST" 
+                          style="display: inline;" 
+                          onsubmit="return confirm('⚠️ Are you sure you want to delete student: {{ student.name }} (Reg No: {{ student.reg_no }})? This action cannot be undone.');"
+                        >
+                          <button 
+                            type="submit" 
+                            class="btn-action delete" 
+                            title="Delete Student"
+                          >
+                            🗑️
+                          </button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <!-- Empty State -->
+          <div class="empty-state">
+            <div class="empty-icon">📂</div>
+            {% if search_query or selected_course %}
+              <h3 class="empty-title">No matching students found</h3>
+              <p class="empty-text">No student records matched your search query. Try searching with a different registration number or name.</p>
+              <div class="empty-actions">
+                <a href="{{ url_for('index') }}" class="btn btn-outline">Clear Search</a>
+              </div>
+            {% else %}
+              <h3 class="empty-title">No student records found</h3>
+              <p class="empty-text">Your student database is currently empty. You can add your first student record or load sample demo data instantly.</p>
+              <div class="empty-actions">
+                <a href="{{ url_for('add_student') }}" class="btn btn-primary">➕ Add First Student</a>
+                <a href="{{ url_for('load_demo_data') }}" class="btn btn-outline">⚡ Insert Demo Records</a>
+              </div>
+            {% endif %}
+          </div>
+        {% endif %}
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer-content">
+      <div>
+        <strong>Student Record Management System</strong> &bull; College CA2 Project
+      </div>
+      <div>
+        Built with <span class="footer-badge">Python</span> <span class="footer-badge">Flask</span> <span class="footer-badge">MongoDB</span> <span class="footer-badge">PyMongo</span>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

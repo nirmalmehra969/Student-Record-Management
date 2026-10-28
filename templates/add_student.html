@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Student | Student Record Management System</title>
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <a href="{{ url_for('index') }}" class="nav-brand">
+        <div class="brand-icon">🎓</div>
+        <div class="brand-text">Edu<span>Track</span></div>
+      </a>
+      <nav class="nav-links">
+        <a href="{{ url_for('index') }}" class="nav-link">
+          <span>📊</span> Dashboard
+        </a>
+        <a href="{{ url_for('add_student') }}" class="nav-link active">
+          <span>➕</span> Add Student
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="main-content">
+    <div class="container">
+
+      <!-- Flash Messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="alert-container" style="max-width: 720px; margin: 0 auto 1.5rem;">
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">
+                <div class="alert-content">
+                  <span>
+                    {% if category == 'success' %}✅
+                    {% elif category == 'danger' %}❌
+                    {% elif category == 'warning' %}⚠️
+                    {% else %}ℹ️{% endif %}
+                  </span>
+                  <span>{{ message }}</span>
+                </div>
+                <button type="button" class="alert-close" onclick="this.parentElement.remove();">&times;</button>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <!-- Add Student Form Card -->
+      <div class="form-card">
+        <div class="form-header">
+          <h2>➕ Add New Student Record</h2>
+          <p>Please enter the complete academic and personal details for the new student.</p>
+        </div>
+
+        <form action="{{ url_for('add_student') }}" method="POST">
+          <div class="form-grid">
+            
+            <!-- Student Name -->
+            <div class="form-group full-width">
+              <label for="name" class="form-label">
+                Student Full Name <span class="required">*</span>
+              </label>
+              <input 
+                type="text" 
+                id="name" 
+                name="name" 
+                class="form-control" 
+                placeholder="e.g. Rahul Sharma" 
+                value="{{ form_data.get('name', '') }}" 
+                required 
+                autofocus
+              >
+              <span class="form-help">Enter full legal name as per college enrollment.</span>
+            </div>
+
+            <!-- Registration Number -->
+            <div class="form-group">
+              <label for="reg_no" class="form-label">
+                Registration Number <span class="required">*</span>
+              </label>
+              <input 
+                type="text" 
+                id="reg_no" 
+                name="reg_no" 
+                class="form-control" 
+                placeholder="e.g. 2024BCSE001" 
+                value="{{ form_data.get('reg_no', '') }}" 
+                style="text-transform: uppercase;" 
+                required
+              >
+              <span class="form-help">Unique college roll or registration ID.</span>
+            </div>
+
+            <!-- Course -->
+            <div class="form-group">
+              <label for="course" class="form-label">
+                Course / Program <span class="required">*</span>
+              </label>
+              <select id="course" name="course" class="form-control" required>
+                <option value="" disabled {% if not form_data.get('course') %}selected{% endif %}>Select Course...</option>
+                <option value="B.Tech CSE" {% if form_data.get('course') == 'B.Tech CSE' %}selected{% endif %}>B.Tech CSE (Computer Science)</option>
+                <option value="B.Tech IT" {% if form_data.get('course') == 'B.Tech IT' %}selected{% endif %}>B.Tech IT (Information Tech)</option>
+                <option value="B.Tech ECE" {% if form_data.get('course') == 'B.Tech ECE' %}selected{% endif %}>B.Tech ECE (Electronics)</option>
+                <option value="BCA" {% if form_data.get('course') == 'BCA' %}selected{% endif %}>BCA (Computer Applications)</option>
+                <option value="MCA" {% if form_data.get('course') == 'MCA' %}selected{% endif %}>MCA (Master of Computer App.)</option>
+                <option value="B.Sc CS" {% if form_data.get('course') == 'B.Sc CS' %}selected{% endif %}>B.Sc Computer Science</option>
+                <option value="M.Tech CSE" {% if form_data.get('course') == 'M.Tech CSE' %}selected{% endif %}>M.Tech CSE</option>
+              </select>
+            </div>
+
+            <!-- Semester -->
+            <div class="form-group">
+              <label for="semester" class="form-label">
+                Current Semester <span class="required">*</span>
+              </label>
+              <select id="semester" name="semester" class="form-control" required>
+                <option value="" disabled {% if not form_data.get('semester') %}selected{% endif %}>Select Semester...</option>
+                {% for sem in range(1, 9) %}
+                  <option value="{{ sem }}" {% if form_data.get('semester')|string == sem|string %}selected{% endif %}>
+                    Semester {{ sem }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- CGPA -->
+            <div class="form-group">
+              <label for="cgpa" class="form-label">
+                Cumulative GPA (CGPA) <span class="required">*</span>
+              </label>
+              <input 
+                type="number" 
+                step="0.01" 
+                min="0.00" 
+                max="10.00" 
+                id="cgpa" 
+                name="cgpa" 
+                class="form-control" 
+                placeholder="e.g. 8.75" 
+                value="{{ form_data.get('cgpa', '') }}" 
+                required
+              >
+              <span class="form-help">CGPA score on a 10.00 scale.</span>
+            </div>
+
+            <!-- Email Address -->
+            <div class="form-group full-width">
+              <label for="email" class="form-label">
+                Email Address <span class="required">*</span>
+              </label>
+              <input 
+                type="email" 
+                id="email" 
+                name="email" 
+                class="form-control" 
+                placeholder="e.g. student@college.edu" 
+                value="{{ form_data.get('email', '') }}" 
+                required
+              >
+              <span class="form-help">Institutional or personal email for communications.</span>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="form-actions">
+              <a href="{{ url_for('index') }}" class="btn btn-outline">
+                Cancel
+              </a>
+              <button type="submit" class="btn btn-primary">
+                <span>💾</span> Save Student Record
+              </button>
+            </div>
+
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer-content">
+      <div>
+        <strong>Student Record Management System</strong> &bull; College CA2 Project
+      </div>
+      <div>
+        Built with <span class="footer-badge">Flask</span> <span class="footer-badge">MongoDB</span>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

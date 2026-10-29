@@ -7,6 +7,7 @@ A complete, clean, and beginner-friendly web application for managing student ac
 ## 📌 Project Overview
 
 This project was developed for the **College Continuous Assessment (CA2)**. It provides a simple, modern, and intuitive interface for college administrators and teachers to perform full **CRUD (Create, Read, Update, Delete)** operations on student records stored in a NoSQL MongoDB database.
+🚀 **Live Demo:** [Open Project](https://student-record-management-1-nsq4.onrender.com)
 
 ### ✨ Key Features
 
